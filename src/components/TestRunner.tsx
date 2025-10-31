@@ -2,10 +2,11 @@ import { useState } from 'react';
 import type { ApiEndpoints } from '../types/api';
 import { checkHealth } from '../services/api';
 import { CloudProvider, type CloudProviderType } from '../types/CloudProvider';
+import { ImageUploader } from './ImageUploader';
 
 interface TestRunnerProps {
   onRunTest: (
-    imageUrl: string,
+    imageFiles: File[],
     provider: CloudProviderType,
     iterations: number
   ) => void;
@@ -15,7 +16,7 @@ interface TestRunnerProps {
 }
 
 export function TestRunner({ onRunTest, isRunning, apiEndpoints, onEndpointsChange }: TestRunnerProps) {
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [provider, setProvider] = useState<CloudProviderType>(CloudProvider.AWS);
   const [iterations, setIterations] = useState(1);
   const [awsHealth, setAwsHealth] = useState<boolean | null>(null);
@@ -32,22 +33,30 @@ export function TestRunner({ onRunTest, isRunning, apiEndpoints, onEndpointsChan
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageUrl.trim()) {
-      alert('Please enter an image URL');
+    if (imageFiles.length === 0) {
+      alert('Please upload at least one image file');
       return;
     }
-    onRunTest(imageUrl, provider, iterations);
+    if (imageFiles.length < iterations) {
+      alert(`You need at least ${iterations} images for ${iterations} iterations. Currently uploaded: ${imageFiles.length}`);
+      return;
+    }
+    onRunTest(imageFiles, provider, iterations);
   };
 
   const handleRunBoth = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!imageUrl.trim()) {
-      alert('Please enter an image URL');
+    if (imageFiles.length === 0) {
+      alert('Please upload at least one image file');
       return;
     }
-    onRunTest(imageUrl, CloudProvider.AWS, iterations);
+    if (imageFiles.length < iterations) {
+      alert(`You need at least ${iterations} images for ${iterations} iterations. Currently uploaded: ${imageFiles.length}`);
+      return;
+    }
+    onRunTest(imageFiles, CloudProvider.AWS, iterations);
     setTimeout(() => {
-      onRunTest(imageUrl, CloudProvider.AZURE, iterations);
+      onRunTest(imageFiles, CloudProvider.AZURE, iterations);
     }, 100);
   };
 
@@ -107,19 +116,10 @@ export function TestRunner({ onRunTest, isRunning, apiEndpoints, onEndpointsChan
           <small>Azure API endpoint URL including /api path</small>
         </div>
 
-        <div className="form-group">
-          <label htmlFor="imageUrl">Image URL *</label>
-          <input
-            type="url"
-            id="imageUrl"
-            value={imageUrl}
-            onChange={(e) => setImageUrl(e.target.value)}
-            placeholder="https://example.com/image.jpg"
-            required
-            disabled={isRunning}
-          />
-          <small>Enter a publicly accessible image URL</small>
-        </div>
+        <ImageUploader
+          onImagesLoaded={setImageFiles}
+          disabled={isRunning}
+        />
 
         <div className="form-row">
           <div className="form-group">
@@ -150,18 +150,29 @@ export function TestRunner({ onRunTest, isRunning, apiEndpoints, onEndpointsChan
         </div>
 
         <div className="button-group">
-          <button type="submit" disabled={isRunning} className="btn-primary">
+          <button
+            type="submit"
+            disabled={isRunning || imageFiles.length === 0 || imageFiles.length < iterations}
+            className="btn-primary"
+          >
             {isRunning ? 'Running...' : `Run Test on ${provider.toUpperCase()}`}
           </button>
           <button
             type="button"
             onClick={handleRunBoth}
-            disabled={isRunning}
+            disabled={isRunning || imageFiles.length === 0 || imageFiles.length < iterations}
             className="btn-both"
           >
             Run on Both Providers
           </button>
         </div>
+
+        {imageFiles.length > 0 && imageFiles.length < iterations && (
+          <p className="validation-warning">
+            ⚠️ Need {iterations - imageFiles.length} more image(s).
+            You have {imageFiles.length} but need {iterations} for {iterations} iterations.
+          </p>
+        )}
       </form>
     </div>
   );

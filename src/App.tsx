@@ -62,19 +62,22 @@ function App() {
   }, [apiEndpoints]);
 
   const handleRunTest = async (
-    imageUrl: string,
+    imageFiles: File[],
     provider: CloudProviderType,
     iterations: number
   ) => {
     setIsRunning(true);
 
     try {
+      // Use only the first 'iterations' images (1 image per request)
+      const filesToUse = imageFiles.slice(0, iterations);
+
       // Create pending metrics immediately for visual feedback
-      const pendingMetrics: MetricsData[] = Array.from({ length: iterations }, () => ({
+      const pendingMetrics: MetricsData[] = filesToUse.map((file) => ({
         id: crypto.randomUUID(),
         timestamp: new Date(),
         provider,
-        imageUrl,
+        imageName: file.name,
         caption: '',
         responseTime: 0,
         statusCode: 0,
@@ -86,8 +89,9 @@ function App() {
       setMetrics((prev) => [...prev, ...pendingMetrics]);
 
       // Fire all requests concurrently and update each one as it completes
-      const promises = pendingMetrics.map((pendingMetric) =>
-        generateCaption(imageUrl, provider, apiEndpoints).then((result) => {
+      const promises = filesToUse.map((file, index) => {
+        const pendingMetric = pendingMetrics[index];
+        return generateCaption(file, provider, apiEndpoints).then((result) => {
           const completedMetric = {
             ...result,
             id: pendingMetric.id, // Use the same ID to replace the pending entry
@@ -103,8 +107,8 @@ function App() {
           );
 
           return completedMetric;
-        })
-      );
+        });
+      });
 
       // Wait for all requests to complete
       await Promise.all(promises);

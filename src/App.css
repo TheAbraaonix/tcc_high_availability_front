@@ -28,7 +28,8 @@ body {
 }
 
 #root {
-  max-width: 1400px;
+  max-width: 2400px;
+  min-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
 }
@@ -552,6 +553,17 @@ button:disabled {
 
 .config {
   font-size: 0.85rem;
+}
+
+.validation-warning {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: rgba(231, 76, 60, 0.1);
+  border-left: 4px solid var(--danger-color);
+  border-radius: 6px;
+  color: var(--danger-color);
+  font-size: 0.95rem;
+  font-weight: 500;
 }
 
 /* Responsive Design */

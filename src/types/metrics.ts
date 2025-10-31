@@ -5,7 +5,7 @@ export interface MetricsData {
   timestamp: Date;
   responseTimestamp?: Date;
   provider: CloudProviderType;
-  imageUrl: string;
+  imageName: string;
   caption: string;
   responseTime: number;
   statusCode: number;

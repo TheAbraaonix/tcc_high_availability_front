@@ -7,7 +7,7 @@ export interface CaptionResponse {
 }
 
 export async function generateCaption(
-  imageUrl: string,
+  imageFile: File,
   provider: CloudProviderType,
   apiEndpoints: ApiEndpoints
 ): Promise<MetricsData> {
@@ -15,12 +15,12 @@ export async function generateCaption(
   const endpoint = apiEndpoints[provider];
 
   try {
+    const formData = new FormData();
+    formData.append('file', imageFile);
+
     const response = await fetch(`${endpoint}/caption`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ imageUrl }),
+      body: formData,
     });
 
     const endTime = performance.now();
@@ -34,7 +34,7 @@ export async function generateCaption(
         timestamp: new Date(),
         responseTimestamp,
         provider,
-        imageUrl,
+        imageName: imageFile.name,
         caption: '',
         responseTime,
         statusCode: response.status,
@@ -50,7 +50,7 @@ export async function generateCaption(
       timestamp: new Date(),
       responseTimestamp,
       provider,
-      imageUrl,
+      imageName: imageFile.name,
       caption: data.caption,
       responseTime,
       statusCode: response.status,
@@ -66,7 +66,7 @@ export async function generateCaption(
       timestamp: new Date(),
       responseTimestamp,
       provider,
-      imageUrl,
+      imageName: imageFile.name,
       caption: '',
       responseTime,
       statusCode: 0,

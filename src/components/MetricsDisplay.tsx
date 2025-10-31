@@ -214,6 +214,7 @@ export function MetricsDisplay({ metrics, aggregated }: MetricsDisplayProps) {
           <table className="results-table">
             <thead>
               <tr>
+                <th>Image Name</th>
                 <th>Request Time</th>
                 <th>Response Time</th>
                 <th>Provider</th>
@@ -240,6 +241,7 @@ export function MetricsDisplay({ metrics, aggregated }: MetricsDisplayProps) {
                         : 'error'
                     }
                   >
+                    <td>{metric.imageName}</td>
                     <td>
                       {new Date(metric.timestamp).toLocaleDateString('en-CA')} {new Date(metric.timestamp).toLocaleTimeString()}
                     </td>
